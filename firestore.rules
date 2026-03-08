@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create, update: if isAuth() && isOwner(userId);
+      allow delete: if false; // Only via admin SDK
+    }
+
+    // Connections
+    match /connections/{connId} {
+      allow read: if isAuth() && request.auth.uid in resource.data.users;
+      allow create: if false; // Only created by acceptRequest Cloud Function
+      allow update, delete: if false;
+    }
+
+    // Friend Requests
+    match /friend_requests/{reqId} {
+      allow read: if isAuth() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isAuth() && resource.data.receiverId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.senderId == request.auth.uid;
+    }
+
+    // Chats: only participants can read/write
+    match /chats/{chatId} {
+      function isParticipant() {
+        return request.auth.uid in resource.data.participants;
+      }
+
+      allow read: if isAuth() && isParticipant();
+      allow write: if isAuth() && isParticipant();
+
+      // Messages sub-collection
+      match /messages/{msgId} {
+        allow read: if isAuth() && get(/databases/$(database)/documents/chats/$(chatId)).data.participants.hasAny([request.auth.uid]);
+        allow create: if isAuth() && request.resource.data.fromUser == request.auth.uid;
+        allow update: if isAuth(); // Allowed for seenBy updates
+        allow delete: if false;
+      }
+
+      // Typing indicators sub-collection
+      match /typing/{uid} {
+        allow read, write: if isAuth() && request.auth.uid == uid;
+      }
+    }
+
+    // Stories: authenticated reads, owner writes
+    match /stories/{storyId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuth(); // Allowed for reactions
+      allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
+    }
+
+    // Proximity events: read-only for participants, write via Cloud Function
+    match /proximity_events/{evtId} {
+      allow read: if isAuth() && (
+        resource.data.discovererId == request.auth.uid ||
+        resource.data.discoveredUserId == request.auth.uid
+      );
+      allow write: if false; // Written exclusively from Cloud Function
+    }
+  }
+}
