@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'story_service.dart';
+import '../services/story_service.dart';
 import '../models/story_model.dart';
 
 // Stream provider to fetch live stories

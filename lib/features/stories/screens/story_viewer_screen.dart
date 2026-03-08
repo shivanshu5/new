@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/story_model.dart';
-import 'controllers/story_controller.dart';
+import '../controllers/story_controller.dart';
 import '../../../core/theme/app_theme.dart';
 
 class StoryViewerScreen extends ConsumerStatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'proximity_service.dart';
+import '../services/proximity_service.dart';
 
 final proximityControllerProvider =
     StateNotifierProvider<ProximityController, bool>((ref) {
