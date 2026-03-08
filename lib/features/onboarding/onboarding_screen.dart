@@ -60,27 +60,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _saveAndNavigate() async {
     setState(() => _isSaving = true);
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) {
-        await FirebaseFirestore.instance.collection('users').doc(uid).update({
-          'displayName': _nameController.text.trim(),
-          'interests': _selectedInterests.toList(),
-          'intent': _selectedIntent,
-          'lastActive': DateTime.now().toIso8601String(),
-        });
-      }
-      if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (r) => false);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save profile. Please try again.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) setState(() => _isSaving = false);
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (r) => false);
     }
   }
 

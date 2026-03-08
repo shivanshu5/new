@@ -35,68 +35,39 @@ class AuthController extends StateNotifier<AuthState> {
   AuthController(this._authService, this._authRepository) : super(const AuthState());
 
   Future<void> requestPhoneOtp(String phoneNumber, BuildContext context) async {
+    // TEMPORARY BYPASS FOR TESTING
     state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      await _authService.verifyPhone(
-        phoneNumber: phoneNumber,
-        codeSent: (String verificationId, int? _) {
-          state = state.copyWith(isLoading: false, verificationId: verificationId);
-          Navigator.pushNamed(context, AppRoutes.otp, arguments: verificationId);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          state = state.copyWith(
-            isLoading: false,
-            error: e.message ?? 'Failed to send OTP',
-          );
-        },
-      );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Unexpected error. Please try again.');
+    await Future.delayed(const Duration(milliseconds: 600));
+    state = state.copyWith(isLoading: false);
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.onboarding, (r) => false);
     }
   }
 
   Future<void> verifyOtpAndLogin(String verificationId, String smsCode, BuildContext context) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      final cred = await _authService.signInWithPhoneOtp(verificationId, smsCode);
-      if (cred.user != null) {
-        await _authRepository.saveUserRecordIfNew(cred.user!);
-        await _navigateAfterLogin(cred.user!.uid, context);
-      }
-      state = state.copyWith(isLoading: false);
-    } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Invalid OTP. Please check and retry.');
+    await Future.delayed(const Duration(milliseconds: 600));
+    state = state.copyWith(isLoading: false);
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.onboarding, (r) => false);
     }
   }
 
   Future<void> signInWithGoogle(BuildContext context) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      final cred = await _authService.signInWithGoogle();
-      if (cred?.user != null) {
-        await _authRepository.saveUserRecordIfNew(cred!.user!);
-        await _navigateAfterLogin(cred.user!.uid, context);
-      } else {
-        // User cancelled sign in
-        state = state.copyWith(isLoading: false);
-      }
-    } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Google sign in failed. Please try again.');
+    await Future.delayed(const Duration(milliseconds: 600));
+    state = state.copyWith(isLoading: false);
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.onboarding, (r) => false);
     }
   }
 
   Future<void> signInWithApple(BuildContext context) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      final cred = await _authService.signInWithApple();
-      if (cred?.user != null) {
-        await _authRepository.saveUserRecordIfNew(cred!.user!);
-        await _navigateAfterLogin(cred.user!.uid, context);
-      } else {
-        state = state.copyWith(isLoading: false);
-      }
-    } catch (_) {
-      state = state.copyWith(isLoading: false, error: 'Apple sign in failed. Please try again.');
+    await Future.delayed(const Duration(milliseconds: 600));
+    state = state.copyWith(isLoading: false);
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.onboarding, (r) => false);
     }
   }
 
