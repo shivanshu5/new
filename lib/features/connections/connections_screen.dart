@@ -19,29 +19,34 @@ class ConnectionsScreen extends ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           // Incoming Requests section
-          SliverToBoxAdapter(
-            child: requestsAsync.when(
-              data: (requests) {
-                if (requests.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                      child: Text('Requests', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                    ...requests.map((req) => _RequestCard(
+          requestsAsync.when(
+            data: (requests) {
+              if (requests.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index == 0) {
+                      return const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+                        child: Text('Requests', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      );
+                    }
+                    if (index == requests.length + 1) {
+                      return const Divider(height: 30);
+                    }
+                    final req = requests[index - 1];
+                    return _RequestCard(
                       request: req,
                       onAccept: () => service.acceptRequest(req.id, req.senderId),
                       onDecline: () => service.declineRequest(req.id),
-                    )),
-                    const Divider(height: 30),
-                  ],
-                );
-              },
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
+                    );
+                  },
+                  childCount: requests.length + 2,
+                ),
+              );
+            },
+            loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+            error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
           ),
 
           // Connections header

@@ -134,47 +134,50 @@ class _NearbyPeopleFeed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        return StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .where('stealthMode', isEqualTo: false)
-              .limit(20)
-              .snapshots(),
-          builder: (ctx, snapshot) {
-            if (!snapshot.hasData) {
-              return const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            final docs = snapshot.data!.docs.where((d) => d.id != myUid).toList();
-            if (docs.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: Text('No one nearby yet. Keep Nearmates open! 📡', textAlign: TextAlign.center)),
-              );
-            }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .where('stealthMode', isEqualTo: false)
+          .limit(20)
+          .snapshots(),
+      builder: (ctx, snapshot) {
+        if (!snapshot.hasData) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+        final docs = snapshot.data!.docs.where((d) => d.id != myUid).toList();
+        if (docs.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: Text('No one nearby yet. Keep Nearmates open! 📡', textAlign: TextAlign.center)),
+            ),
+          );
+        }
 
-            return Column(
-              children: docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                final interests = List<String>.from(data['interests'] ?? []);
-                return _NearbyPersonCard(
-                  uid: doc.id,
-                  name: data['displayName'] ?? 'User',
-                  bio: data['bio'] ?? '',
-                  interests: interests.take(3).toList(),
-                  avatarUrl: data['profilePhotoUrl'] ?? '',
-                  intent: data['intent'] ?? 'friends',
-                );
-              }).toList(),
-            );
-          },
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final doc = docs[index];
+              final data = doc.data() as Map<String, dynamic>;
+              final interests = List<String>.from(data['interests'] ?? []);
+              return _NearbyPersonCard(
+                uid: doc.id,
+                name: data['displayName'] ?? 'User',
+                bio: data['bio'] ?? '',
+                interests: interests.take(3).toList(),
+                avatarUrl: data['profilePhotoUrl'] ?? '',
+                intent: data['intent'] ?? 'friends',
+              );
+            },
+            childCount: docs.length,
+          ),
         );
-        // Guard: only render one item representing the whole stream
-      }, childCount: 1),
+      },
     );
   }
 }
